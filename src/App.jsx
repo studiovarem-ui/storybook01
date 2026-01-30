@@ -147,16 +147,17 @@ const BookCreatorScreen = ({ history, endingNode, onHome, onRestart }) => {
   const [showPreview, setShowPreview] = useState(false);
   const bookRef = useRef(null);
 
-  const storySummary = [...history, endingNode.id].map(nodeId => {
+  // 전체 스토리 텍스트 가져오기
+  const fullStory = [...history, endingNode.id].map(nodeId => {
     const node = storyNodes[nodeId];
-    return node ? { title: node.title, emoji: characterEmojis[node.character] || '🐉' } : null;
+    return node ? { text: node.text } : null;
   }).filter(Boolean);
 
   const downloadImage = async () => {
     if (!bookRef.current) return;
     try {
       const html2canvas = (await import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm')).default;
-      const canvas = await html2canvas(bookRef.current, { backgroundColor: null, scale: 2 });
+      const canvas = await html2canvas(bookRef.current, { backgroundColor: '#fffbeb', scale: 2 });
       const link = document.createElement('a');
       link.download = `${title || '나의 드래곤 이야기'}.png`;
       link.href = canvas.toDataURL('image/png');
@@ -167,65 +168,70 @@ const BookCreatorScreen = ({ history, endingNode, onHome, onRestart }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-400 via-pink-300 to-orange-200 p-4">
+    <div className="min-h-screen bg-gradient-to-b from-amber-100 via-orange-50 to-yellow-50 p-4">
       <div className="max-w-md mx-auto">
         <div className="flex items-center justify-between mb-6">
           <button onClick={onHome} className="btn-press text-2xl w-10 h-10 flex items-center justify-center rounded-full bg-white shadow">🏠</button>
-          <h1 className="text-2xl font-black text-white drop-shadow-lg">📖 나만의 동화책</h1>
+          <h1 className="text-2xl font-black text-amber-800">나만의 동화책</h1>
           <div className="w-10"></div>
         </div>
 
         {!showPreview ? (
           <div className="bg-white rounded-3xl p-6 shadow-xl">
             <div className="mb-6">
-              <label className="block text-gray-700 font-bold mb-2">📚 책 제목</label>
-              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="나의 드래곤 이야기" className="w-full px-4 py-3 rounded-xl border-2 border-purple-200 focus:border-purple-400 focus:outline-none text-lg" />
+              <label className="block text-gray-700 font-bold mb-2">책 제목</label>
+              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="나의 드래곤 이야기" className="w-full px-4 py-3 rounded-xl border-2 border-amber-200 focus:border-amber-400 focus:outline-none text-lg" />
             </div>
             <div className="mb-6">
-              <label className="block text-gray-700 font-bold mb-2">✍️ 작가 이름</label>
-              <input type="text" value={author} onChange={(e) => setAuthor(e.target.value)} placeholder="홍길동" className="w-full px-4 py-3 rounded-xl border-2 border-purple-200 focus:border-purple-400 focus:outline-none text-lg" />
+              <label className="block text-gray-700 font-bold mb-2">작가 이름</label>
+              <input type="text" value={author} onChange={(e) => setAuthor(e.target.value)} placeholder="홍길동" className="w-full px-4 py-3 rounded-xl border-2 border-amber-200 focus:border-amber-400 focus:outline-none text-lg" />
             </div>
             <div className="mb-6">
-              <label className="block text-gray-700 font-bold mb-2">🗺️ 나의 모험 경로</label>
-              <div className="flex flex-wrap gap-2">
-                {storySummary.map((item, idx) => (
-                  <span key={idx} className="inline-flex items-center gap-1 bg-gradient-to-r from-amber-100 to-orange-100 px-3 py-1 rounded-full text-sm">
-                    <span>{item.emoji}</span>
-                    <span className="text-gray-700">{item.title}</span>
-                  </span>
+              <label className="block text-gray-700 font-bold mb-2">미리보기</label>
+              <div className="bg-amber-50 rounded-xl p-4 max-h-40 overflow-y-auto text-sm text-gray-600 leading-relaxed">
+                {fullStory.slice(0, 2).map((item, idx) => (
+                  <p key={idx} className="mb-2">{item.text.substring(0, 50)}...</p>
                 ))}
+                <p className="text-amber-500">... 총 {fullStory.length}개의 장면</p>
               </div>
             </div>
-            <button onClick={() => { playSound('click'); setShowPreview(true); }} className="btn-press w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xl font-bold py-4 rounded-full shadow-lg">✨ 미리보기</button>
+            <button onClick={() => { playSound('click'); setShowPreview(true); }} className="btn-press w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xl font-bold py-4 rounded-full shadow-lg">동화책 만들기</button>
           </div>
         ) : (
           <div>
-            <div ref={bookRef} className="bg-gradient-to-b from-amber-50 to-orange-50 rounded-3xl p-6 shadow-xl border-4 border-amber-200 mb-6">
-              <div className="text-center mb-4">
-                <div className="text-6xl mb-2">🐉</div>
-                <h2 className="text-2xl font-black text-amber-800">{title || '나의 드래곤 이야기'}</h2>
-                <p className="text-amber-600 mt-1">글: {author || '익명의 모험가'}</p>
+            {/* 동화책 본문 */}
+            <div ref={bookRef} className="bg-amber-50 rounded-none p-8 shadow-xl mb-6" style={{ fontFamily: 'Noto Serif KR, serif' }}>
+              {/* 표지 */}
+              <div className="text-center mb-8 pb-8 border-b-2 border-amber-200">
+                <h1 className="text-3xl font-bold text-amber-900 mb-4" style={{ fontFamily: 'Noto Serif KR, serif' }}>{title || '나의 드래곤 이야기'}</h1>
+                <p className="text-amber-700 text-lg">글: {author || '익명의 모험가'}</p>
               </div>
-              <div className="border-t-2 border-dashed border-amber-300 my-4"></div>
-              <div className="space-y-2">
-                <p className="text-center text-amber-700 font-bold mb-3">📜 나의 모험</p>
-                {storySummary.map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-2 text-amber-800">
-                    <span className="text-xl">{item.emoji}</span>
-                    <span className="flex-grow">{item.title}</span>
-                    {idx < storySummary.length - 1 && <span className="text-amber-400">▼</span>}
+              
+              {/* 본문 */}
+              <div className="space-y-6">
+                {fullStory.map((item, idx) => (
+                  <div key={idx}>
+                    <p className="text-gray-800 text-base leading-loose indent-4" style={{ fontFamily: 'Noto Serif KR, serif' }}>
+                      {item.text}
+                    </p>
+                    {idx < fullStory.length - 1 && (
+                      <div className="text-center my-4 text-amber-300">* * *</div>
+                    )}
                   </div>
                 ))}
               </div>
-              <div className="mt-4 text-center">
-                <span className="inline-block bg-gradient-to-r from-yellow-400 to-orange-400 text-white font-bold px-4 py-2 rounded-full shadow">🏆 {endingNode.title}</span>
+
+              {/* 끝 */}
+              <div className="text-center mt-10 pt-8 border-t-2 border-amber-200">
+                <p className="text-amber-600 text-lg" style={{ fontFamily: 'Noto Serif KR, serif' }}>- 끝 -</p>
               </div>
-              <div className="mt-4 text-center text-xs text-amber-500">드래곤 어드벤처 🐉 나만의 동화책</div>
             </div>
+
+            {/* 버튼들 */}
             <div className="space-y-3">
-              <button onClick={downloadImage} className="btn-press w-full bg-gradient-to-r from-green-500 to-teal-500 text-white text-xl font-bold py-4 rounded-full shadow-lg">📥 이미지로 저장하기</button>
-              <button onClick={() => setShowPreview(false)} className="btn-press w-full bg-white text-purple-600 font-bold py-3 rounded-full shadow border-2 border-purple-200">✏️ 다시 수정하기</button>
-              <button onClick={() => { playSound('click'); onRestart(); }} className="btn-press w-full bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold py-3 rounded-full shadow-lg">🔄 새로운 모험 시작하기</button>
+              <button onClick={downloadImage} className="btn-press w-full bg-gradient-to-r from-green-500 to-teal-500 text-white text-xl font-bold py-4 rounded-full shadow-lg">이미지로 저장하기</button>
+              <button onClick={() => setShowPreview(false)} className="btn-press w-full bg-white text-amber-600 font-bold py-3 rounded-full shadow border-2 border-amber-200">다시 수정하기</button>
+              <button onClick={() => { playSound('click'); onRestart(); }} className="btn-press w-full bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold py-3 rounded-full shadow-lg">새로운 모험 시작하기</button>
             </div>
           </div>
         )}
